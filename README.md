@@ -54,12 +54,12 @@ dependency and no output other than generation iteration times.
 These are from March 10, 2025 on my wall-powered MacBook Pro M2 Max
 running `ruby 3.4.2 (2025-02-15 revision d2930f8e7a) +PRISM [arm64-darwin22]`.
 
-| Rows | Cols | Cells | Neigh. | Iter.     |
-|------|------|-------|--------|-----------|
-| 5    | 5    | 25    | 144    | 2 ms      |
-| 10   | 10   | 100   | 684    | 15 ms     |
-| 25   | 25   | 625   | 4704   | 70 ms     |
-| 50   | 50   | 2500  | 19404  | 390 ms    |
+| Rows | Cols | Cells | Neigh. | Iter.  | Msg/sec |
+|------|------|-------|--------|--------|---------|
+| 5    | 5    | 25    | 144    | 2 ms   | 72,000  |
+| 10   | 10   | 100   | 684    | 15 ms  | 45,144  |
+| 25   | 25   | 625   | 4704   | 70 ms  | 65,856  |
+| 50   | 50   | 2500  | 19404  | 390 ms | 38,808  |
 
 Iteration times were calculated using a monotonic clock:
 
@@ -79,7 +79,9 @@ the performance scaling issues outlined above.
 system.
 
 With the configuration shown below, there are 684 cells and 5,146 neighbors.
-The iteration time is about 130 ms and the framerate is about 7 fps.
+The iteration time is about 120 ms and the framerate is about 7 fps.
+
+That's almost 50,000 messages per second: 5146 * (1000 / 120) = 42,883.
 
 The Ruby VM and its actor scheduler aren't able to deliver enough performance
 for Game of Life and other comparable workloads.
@@ -100,7 +102,38 @@ Usage: ruby game_of_life.rb [options]
     -h, --help                       Show this help message
 ```
 
-[Gosper's glider gun](https://en.wikipedia.org/wiki/Bill_Gosper) (performance issues noted above):
+### Blinker
+
+* [blinker.txt](patterns/blinker.txt)
+* 5 rows
+* 5 columns
+* 25 cells
+* 144 neighbors
+
+```ruby
+ruby game_of_life.rb --grid patterns/blinker.txt --period 200
+```
+
+### Pulsar
+
+* [pulsar.txt](patterns/pulsar.txt)
+* 17 rows
+* 17 columns
+* 289 cells
+* 2112 neighbors
+
+```ruby
+ruby game_of_life.rb --grid patterns/pulsar.txt --period 200
+```
+
+### Gosper's Glider Gun
+
+* [Gosper's glider gun](https://en.wikipedia.org/wiki/Bill_Gosper)
+* [gosper_glider_gun.txt](patterns/gosper_glider_gun.txt)
+* 19 rows
+* 36 columns
+* 684 cells
+* 5146 neighbors
 
 ```
 ruby game_of_life.rb --grid patterns/gosper_glider_gun.txt --bottom 10 --period 20
