@@ -84,7 +84,7 @@ The iteration time is about 120 ms and the framerate is about 7 fps.
 That's almost 50,000 messages per second: 5146 * (1000 / 120) = 42,883.
 
 The Ruby VM and its actor scheduler aren't able to deliver enough performance
-for Game of Life and other comparable workloads.
+for large Game of Life grids and other comparable workloads.
 
 ## Run
 
@@ -110,7 +110,7 @@ Usage: ruby game_of_life.rb [options]
 * 25 cells
 * 144 neighbors
 
-```ruby
+```
 ruby game_of_life.rb --grid patterns/blinker.txt --period 200
 ```
 
@@ -122,7 +122,7 @@ ruby game_of_life.rb --grid patterns/blinker.txt --period 200
 * 289 cells
 * 2112 neighbors
 
-```ruby
+```
 ruby game_of_life.rb --grid patterns/pulsar.txt --period 200
 ```
 
