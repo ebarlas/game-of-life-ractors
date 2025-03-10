@@ -27,32 +27,62 @@ General logic:
 ## Performance
 
 Despite seemingly simple, optimal code for communication between actors,
-the overhead of each `Ractor` seems to pile up quickly. The time to compute
-a new generation exceeds 100 milliseconds with a grid that has 500 or more cells
-on my current machine (MacBook Pro M2 Max). However, the CPU utilization for the
-`ruby` process is only around 150%.
+the overhead of each `Ractor` seems to pile up quickly.
 
-As noted in the outline above, for each generation, each cell must send and receive
-liveness messages with each neighbor (most cells have 8 neighbors). 
+A new generation is computed in each iteration. To do so (as noted above),
+each cell exchanges liveness information
+with its neighbors. Each interior cell calls `Ractor.send` 8 times to
+share its liveness with neighbors, and then calls `Ractor.receive` 8 times
+to receive liveness information on its input port.
 
-This seems to suggest hidden costs with frequent communication between many `Ractor`
-instances. This could also be related to the use of a platform OS thread per `Ractor`
-instance by the Ruby VM.
+Cells along the edges have only 5 neighbors and cells in the corners have 3.
 
-Note for reference that the proof-of-concept code below trivially uses 4 dedicated cores,
-with my MacBook reporting 400% CPU utilization.
-
+```ruby
+neighbors = 3 * 4 + # corners
+  5 * (rows - 2) * 2 + # edge columns
+  5 * (cols - 2) * 2 + # edge rows
+  8 * (rows - 2) * (cols - 2) # interior
 ```
-ractors = 4.times.map do
-  Ractor.new do
-    loop do
-      Math.sqrt(rand) # Some meaningless computation
-    end
-  end
-end
 
-ractors.each(&:take)
+The Game of Life animation update rate (and framerate) drops quickly
+as the number of cells increases. The framerate is just bearable
+with a 25 by 25 grid.
+
+The numbers below are from a benchmark version of the code with no Gosu
+dependency and no output other than generation iteration times.
+
+These are from March 10, 2025 on my wall-powered MacBook Pro M2 Max
+running `ruby 3.4.2 (2025-02-15 revision d2930f8e7a) +PRISM [arm64-darwin22]`.
+
+| Rows | Cols | Cells | Neigh. | Iter.     |
+|------|------|-------|--------|-----------|
+| 5    | 5    | 25    | 144    | 2 ms      |
+| 10   | 10   | 100   | 684    | 15 ms     |
+| 25   | 25   | 625   | 4704   | 70 ms     |
+| 50   | 50   | 2500  | 19404  | 390 ms    |
+
+Iteration times were calculated using a monotonic clock:
+
+```ruby
+Process.clock_gettime(Process::CLOCK_MONOTONIC)
 ```
+
+## Conclusion
+
+This project was originally intended to be a fun demonstration of Ruby actors.
+
+Unfortunately, I wasn't able to animate larger Game of Life patterns due to
+the performance scaling issues outlined above.
+
+[Gosper's glider gun](https://en.wikipedia.org/wiki/Bill_Gosper) available with
+[this pattern](patterns/gosper_glider_gun.txt) is just barely workable on my current
+system.
+
+With the configuration shown below, there are 684 cells and 5,146 neighbors.
+The iteration time is about 130 ms and the framerate is about 7 fps.
+
+The Ruby VM and its actor scheduler aren't able to deliver enough performance
+for Game of Life and other comparable workloads.
 
 ## Run
 
